@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NotesShare – share notes, buy notes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F7F6FF; --ink:#1E1B3A; --muted:#6B6890; --line:#DAD7F2;
+  --peri:#9AA5FF; --butter:#FFE76A; --pink:#FFA9CF; --mint:#9CF0CF; --peach:#FFC59A; --sky:#9BDDFF;
+  --r:20px;
+}
+*{box-sizing:border-box;margin:0}
+html{scroll-behavior:smooth}
+body{font-family:"Bricolage Grotesque",system-ui,sans-serif;background:var(--paper);color:var(--ink);line-height:1.5;-webkit-font-smoothing:antialiased}
+a{color:inherit}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--ink);outline-offset:3px;border-radius:10px}
+[hidden]{display:none!important}
+.wrap{max-width:1080px;margin:0 auto;padding:0 20px}
+
+/* buttons */
+.btn{display:inline-flex;align-items:center;gap:8px;border:2px solid var(--ink);background:#fff;border-radius:999px;padding:10px 20px;font-weight:600;cursor:pointer;transition:transform .12s,box-shadow .12s}
+.btn:hover{transform:translate(-2px,-2px);box-shadow:3px 3px 0 var(--ink)}
+.btn:active{transform:none;box-shadow:none}
+.btn.primary{background:var(--butter)}
+.btn.dark{background:var(--ink);color:#fff}
+.btn.small{padding:6px 14px;font-size:.9rem}
+
+/* nav */
+header{position:sticky;top:0;z-index:5;background:color-mix(in srgb,var(--paper) 88%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+nav{display:flex;align-items:center;gap:10px;padding:12px 0}
+.logo{font-weight:800;font-size:1.35rem;letter-spacing:-.03em;text-decoration:none;margin-right:auto}
+.logo i{display:inline-block;width:.7em;height:.7em;background:var(--peri);border:2px solid var(--ink);border-radius:50%;margin-right:6px}
+#cartCount{background:var(--pink);border:2px solid var(--ink);border-radius:999px;min-width:24px;padding:0 6px;font-size:.85rem;text-align:center}
+.account-btn{background:var(--mint);padding:6px 12px}
+.account-icon{width:18px;height:18px;flex:none}
+.account-name{font-weight:600;overflow-wrap:anywhere;margin:0 0 18px}
+
+/* hero */
+.hero{padding:72px 0 40px}
+h1{font-size:clamp(2.8rem,9vw,6.4rem);line-height:.95;letter-spacing:-.045em;font-weight:800;max-width:11ch}
+.hero p{font-size:1.2rem;color:var(--muted);max-width:42ch;margin:22px 0 28px}
+.hero .row{display:flex;flex-wrap:wrap;gap:12px}
+
+/* toolbar */
+.bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:40px 0 20px}
+.bar h2{font-size:1.6rem;letter-spacing:-.03em;margin-right:auto}
+.search{border:2px solid var(--ink);border-radius:999px;padding:9px 18px;background:#fff;min-width:200px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:24px}
+.chip{border:2px solid var(--ink);background:transparent;border-radius:999px;padding:5px 14px;cursor:pointer;font-size:.92rem}
+.chip[aria-pressed="true"]{background:var(--ink);color:#fff}
+
+/* cards */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:18px;padding-bottom:40px}
+.card{background:#fff;border:2px solid var(--ink);border-radius:var(--r);overflow:hidden;display:flex;flex-direction:column}
+.cover{height:92px;padding:14px;display:flex;align-items:flex-end;justify-content:space-between;border-bottom:2px solid var(--ink)}
+.tag{background:#fff;border:2px solid var(--ink);border-radius:999px;padding:1px 10px;font-size:.82rem}
+.body{padding:16px;display:flex;flex-direction:column;gap:6px;flex:1}
+.body h3{font-size:1.15rem;line-height:1.25;letter-spacing:-.02em}
+.meta{color:var(--muted);font-size:.9rem}
+.acts{display:flex;gap:8px;margin-top:auto;padding-top:12px}
+.empty{grid-column:1/-1;text-align:center;color:var(--muted);padding:40px 0}
+
+/* sell strip */
+.strip{background:var(--peri);border:2px solid var(--ink);border-radius:28px;padding:36px;margin:10px 0 60px;display:flex;flex-wrap:wrap;gap:20px;align-items:center;justify-content:space-between}
+.strip h2{font-size:clamp(1.6rem,4vw,2.4rem);letter-spacing:-.03em;line-height:1.1;max-width:18ch}
+footer{border-top:1px solid var(--line);padding:28px 0;color:var(--muted);font-size:.92rem}
+
+/* dialogs */
+dialog{border:2px solid var(--ink);border-radius:24px;padding:24px;background:var(--paper);width:min(440px,calc(100% - 32px));color:var(--ink)}
+dialog::backdrop{background:rgba(30,27,58,.45)}
+dialog.sheet{margin:0 0 0 auto;height:100%;max-height:100%;border-radius:24px 0 0 24px;width:min(380px,100%)}
+dialog h2{margin-bottom:16px;letter-spacing:-.03em}
+label{display:block;font-weight:600;font-size:.92rem;margin:12px 0 4px}
+.field{width:100%;border:2px solid var(--ink);border-radius:14px;padding:10px 14px;background:#fff}
+.dlgrow{display:flex;gap:10px;justify-content:flex-end;margin-top:22px}
+.line{display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}
+.line button{border:0;background:none;cursor:pointer;color:var(--muted);text-decoration:underline}
+.total{display:flex;justify-content:space-between;font-weight:800;font-size:1.2rem;margin:18px 0}
+
+#toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,120px);background:var(--ink);color:#fff;padding:12px 22px;border-radius:999px;transition:transform .25s;z-index:20;max-width:90%}
+#toast.show{transform:translate(-50%,0)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+@media (max-width:560px){.hero{padding-top:44px}.strip{padding:24px}.btn.hide-sm{display:none}.account-btn{padding:6px}.account-btn span{display:none}nav{gap:6px}.logo{font-size:1.15rem}.btn.small{padding:6px 9px}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <nav>
+      <a class="logo" href="#top"><i></i>NotesShare</a>
+      <a class="btn small hide-sm" href="form.html">Request notes</a>
+      <a class="btn small hide-sm" id="signInLink" href="auth.html">
+        <svg class="account-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4" fill="none" stroke="currentColor" stroke-width="2"/><path d="M4 21a8 8 0 0 1 16 0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        Sign in
+      </a>
+      <button class="btn small account-btn" id="accountBtn" type="button" aria-label="Account, signed in" aria-haspopup="dialog" aria-controls="accountDlg" hidden>
+        <svg class="account-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4" fill="none" stroke="currentColor" stroke-width="2"/><path d="M4 21a8 8 0 0 1 16 0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        <span>Signed in</span>
+      </button>
+      <button class="btn small primary" data-open="shareDlg">Share notes</button>
+      <button class="btn small dark" id="cartBtn" aria-label="Open cart">Cart <span id="cartCount">0</span></button>
+    </nav>
+  </div>
+</header>
+
+<main id="top">
+  <section class="hero wrap">
+    <h1>notes from people who actually went to class.</h1>
+    <p>Share yours or find class notes. Free downloads are ready; paid checkout is coming soon.</p>
+    <div class="row">
+      <button class="btn primary" data-open="shareDlg">Share your notes</button>
+      <a class="btn" href="#browse">Browse notes</a>
+      <a class="btn" href="form.html">Request notes</a>
+    </div>
+  </section>
+
+  <section class="wrap" id="browse">
+    <div class="bar">
+      <h2>Fresh notes</h2>
+      <input class="search" id="q" type="search" placeholder="Search notes or subjects" aria-label="Search notes">
+    </div>
+    <div class="chips" id="chips" role="group" aria-label="Filter by subject"></div>
+    <p class="meta" id="notesNotice" role="status" hidden></p>
+    <button class="btn small" id="retryNotes" type="button" hidden>Retry loading notes</button>
+    <div class="grid" id="grid"></div>
+
+    <div class="strip">
+      <h2>Your notes are worth something.</h2>
+      <button class="btn dark" data-open="shareDlg">Sell your notes</button>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">Made by students, for students. © 2026 NotesShare</div>
+</footer>
+
+<!-- share dialog -->
+<dialog id="shareDlg">
+  <form id="shareForm" method="dialog">
+    <h2>Share your notes</h2>
+    <label for="fTitle">Title</label>
+    <input class="field" id="fTitle" required maxlength="60" placeholder="e.g. Thermodynamics in 10 pages">
+    <label for="fSubject">Subject</label>
+    <select class="field" id="fSubject" required></select>
+    <label for="fPrice">Price in ₹ (0 = free)</label>
+    <input class="field" id="fPrice" type="number" min="0" max="999" step="1" value="0" required>
+    <label for="fFile">Notes file</label>
+    <input class="field" id="fFile" type="file" accept=".pdf,.png,.jpg,.jpeg,.doc,.docx" required>
+    <div class="dlgrow">
+      <button class="btn" type="button" data-close>Cancel</button>
+      <button class="btn primary" type="submit">Publish notes</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- cart -->
+<dialog id="cartDlg" class="sheet">
+  <h2>Your cart</h2>
+  <div id="cartItems"></div>
+  <div class="total"><span>Total</span><span id="cartTotal">₹0</span></div>
+  <p class="meta">Paid purchases are not available yet.</p>
+  <div class="dlgrow" style="margin-top:0">
+    <button class="btn" data-close>Keep browsing</button>
+    <button class="btn primary" id="checkout" disabled>Checkout coming soon</button>
+  </div>
+</dialog>
+
+<dialog id="accountDlg" aria-labelledby="accountTitle">
+  <h2 id="accountTitle">Your account</h2>
+  <p class="account-name" id="accountName"></p>
+  <p class="meta">You are signed in.</p>
+  <div class="dlgrow">
+    <button class="btn" type="button" data-close>Close</button>
+    <button class="btn dark" type="button" id="signOutBtn">Sign out</button>
+  </div>
+</dialog>
+
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script type="module">
+import { auth, db, firebaseErrorMessage, storage } from './firebase.js';
+import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/13.3.0/firebase-auth.js';
+import {
+  addDoc, collection, doc, getDocs, orderBy, query, serverTimestamp, setDoc
+} from 'https://www.gstatic.com/firebasejs/13.3.0/firebase-firestore.js';
+import {
+  deleteObject, getDownloadURL, ref, uploadBytes
+} from 'https://www.gstatic.com/firebasejs/13.3.0/firebase-storage.js';
+
+const COLORS = {Chemistry:'var(--mint)',Maths:'var(--butter)',Economics:'var(--peach)',CS:'var(--sky)',History:'var(--pink)',Physics:'var(--peri)'};
+const SUBJECTS = Object.keys(COLORS);
+const DEMO_NOTES = [
+  {id:'demo-1',title:'Organic chemistry: reaction maps',subject:'Chemistry',by:'aanya',price:0,isDemo:true},
+  {id:'demo-2',title:'Calculus II quick revision',subject:'Maths',by:'rohan',price:0,isDemo:true},
+  {id:'demo-3',title:'Macroeconomics: key concepts',subject:'Economics',by:'simran',price:0,isDemo:true},
+  {id:'demo-4',title:'Data structures, drawn out',subject:'CS',by:'kabir',price:0,isDemo:true},
+  {id:'demo-5',title:'Modern history timeline',subject:'History',by:'ishita',price:0,isDemo:true},
+  {id:'demo-6',title:'Physics: waves and optics',subject:'Physics',by:'arjun',price:0,isDemo:true}
+];
+
+let notes = DEMO_NOTES, cart = [], filter = 'All', currentUser = null;
+let notesLoaded = true;
+let shouldOpenShare = new URLSearchParams(location.search).get('share') === '1';
+
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const money = n => n ? '₹' + n : 'Free';
+
+function toast(msg){
+  const t = $('#toast'); t.textContent = msg; t.classList.add('show');
+  clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove('show'), 2400);
+}
+
+function renderChips(){
+  $('#chips').innerHTML = ['All','Free',...SUBJECTS].map(c =>
+    `<button class="chip" aria-pressed="${c===filter}" data-f="${c}">${c}</button>`).join('');
+}
+
+function showNotesNotice(message, canRetry = false){
+  $('#notesNotice').textContent = message;
+  $('#notesNotice').hidden = !message;
+  $('#retryNotes').hidden = !canRetry;
+}
+
+function renderGrid(){
+  const q = $('#q').value.trim().toLowerCase();
+  const list = notes.filter(n =>
+    (filter==='All' || (filter==='Free' ? n.price===0 : n.subject===filter)) &&
+    (!q || (n.title+n.subject).toLowerCase().includes(q)));
+  $('#grid').innerHTML = list.length ? list.map(n => `
+    <article class="card">
+      <div class="cover" style="background:${COLORS[n.subject]||'var(--line)'}">
+        <span class="tag">${esc(n.subject)}</span><strong>${n.isDemo ? 'Demo' : money(n.price)}</strong>
+      </div>
+      <div class="body">
+        <h3>${esc(n.title)}</h3>
+        <p class="meta">${n.isDemo ? 'Sample listing · no downloadable file' : `by @${esc(n.by)}`}</p>
+        <div class="acts">
+          ${n.isDemo
+            ? '<button class="btn small" data-demo>Demo only</button>'
+            : `<button class="btn small" data-preview="${esc(n.id)}">Preview</button>
+              ${n.price && n.ownerUid !== (currentUser && currentUser.uid)
+                ? `<button class="btn small primary" data-buy="${esc(n.id)}">Add to cart</button>`
+                : `<button class="btn small primary" data-download="${esc(n.id)}">Download</button>`}`}
+        </div>
+      </div>
+    </article>`).join('') : `<p class="empty">${notesLoaded ? 'No notes found. Be the first to share some.' : 'Connecting to notes…'}</p>`;
+}
+
+function renderCart(){
+  $('#cartCount').textContent = cart.length;
+  $('#cartItems').innerHTML = cart.length ? cart.map(n =>
+    `<div class="line"><span>${esc(n.title)}</span><span>${money(n.price)} <button data-rm="${esc(n.id)}">Remove</button></span></div>`).join('')
+    : '<p class="meta">Your cart is empty. Find some notes first.</p>';
+  $('#cartTotal').textContent = '₹' + cart.reduce((s,n) => s + n.price, 0);
+}
+
+async function loadNotes(){
+  notesLoaded = false;
+  showNotesNotice('Demo listings are shown while live notes load.');
+  renderGrid();
+  let timeoutId;
+  try {
+    const snapshot = await Promise.race([
+      getDocs(query(collection(db, 'notes'), orderBy('createdAt', 'desc'))),
+      new Promise((resolve, reject) => {
+        timeoutId = setTimeout(() => reject(new Error('Timed out while loading notes')), 10000);
+      })
+    ]);
+    const liveNotes = snapshot.docs.map(noteDoc => ({ id: noteDoc.id, ...noteDoc.data() }));
+    notes = liveNotes.length ? liveNotes : DEMO_NOTES;
+    showNotesNotice(liveNotes.length
+      ? ''
+      : 'These are demo listings. Uploaded notes will appear here when available.');
+  } catch (error) {
+    console.error('Could not load notes:', error);
+    if (!notes.some(note => !note.isDemo)) notes = DEMO_NOTES;
+    showNotesNotice('Showing demo listings because Firebase could not load notes. Retry after checking your connection and setup.', true);
+    toast(error.message === 'Timed out while loading notes'
+      ? 'Loading notes timed out. Check your connection and Firebase setup.'
+      : firebaseErrorMessage(error));
+  } finally {
+    clearTimeout(timeoutId);
+    notesLoaded = true;
+    renderGrid();
+  }
+}
+
+async function openNote(note){
+  try {
+    const url = await getDownloadURL(ref(storage, note.storagePath));
+    location.href = url;
+  } catch (error) {
+    console.error('Could not open note:', error);
+    toast(firebaseErrorMessage(error));
+  }
+}
+
+document.addEventListener('click', e => {
+  const t = e.target.closest('button'); if (!t) return;
+  if (t.id === 'retryNotes') return loadNotes();
+  if (t.hasAttribute('data-demo')) {
+    return toast('This is a sample listing. Upload a real note to publish it.');
+  }
+  if (t.dataset.open) {
+    if (!currentUser) return location.assign('auth.html?next=share#signup');
+    $('#'+t.dataset.open).showModal();
+  }
+  if (t.hasAttribute('data-close')) t.closest('dialog').close();
+  if (t.dataset.f){ filter = t.dataset.f; renderChips(); renderGrid(); }
+  if (t.dataset.buy){
+    const n = notes.find(x => x.id === t.dataset.buy);
+    if (n && !cart.some(c => c.id === n.id)) {
+      cart.push(n); renderCart(); toast('Added to cart');
+    } else if (n) {
+      toast('Already in your cart');
+    }
+  }
+  if (t.dataset.download || t.dataset.preview) {
+    const note = notes.find(x => x.id === (t.dataset.download || t.dataset.preview));
+    if (note) openNote(note);
+  }
+  if (t.dataset.rm){ cart = cart.filter(c => c.id != t.dataset.rm); renderCart(); }
+});
+
+$('#q').addEventListener('input', renderGrid);
+$('#cartBtn').addEventListener('click', () => $('#cartDlg').showModal());
+$('#accountBtn').addEventListener('click', () => $('#accountDlg').showModal());
+$('#signOutBtn').addEventListener('click', async () => {
+  const button = $('#signOutBtn');
+  button.disabled = true;
+  try {
+    await signOut(auth);
+    cart = [];
+    renderCart();
+    $('#accountDlg').close();
+    toast('You are signed out.');
+  } catch (error) {
+    console.error('Could not sign out:', error);
+    toast(firebaseErrorMessage(error));
+  } finally {
+    button.disabled = false;
+  }
+});
+$('#fSubject').innerHTML = SUBJECTS.map(s => `<option>${s}</option>`).join('');
+$('#shareForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  if (!currentUser) return location.assign('auth.html?next=share#signup');
+
+  const file = $('#fFile').files[0];
+  const extensions = {
+    pdf:'application/pdf',
+    png:'image/png',
+    jpg:'image/jpeg',
+    jpeg:'image/jpeg',
+    doc:'application/msword',
+    docx:'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+  };
+  const extension = file && file.name.split('.').pop().toLowerCase();
+  if (!file || !extensions[extension]) return toast('Choose a PDF, image, DOC, or DOCX file.');
+  if (file.size > 20 * 1024 * 1024) return toast('The file must be 20 MB or smaller.');
+
+  const submit = $('#shareForm').querySelector('[type="submit"]');
+  submit.disabled = true;
+  let uploadedRef = null;
+  let uploadComplete = false;
+  try {
+    const noteRef = doc(collection(db, 'notes'));
+    const fileName = file.name.replace(/[^A-Za-z0-9._-]/g, '_');
+    const price = Number($('#fPrice').value);
+    const access = price === 0 ? 'free' : 'paid';
+    const storagePath = `notes/${currentUser.uid}/${access}/${noteRef.id}/${fileName}`;
+    uploadedRef = ref(storage, storagePath);
+    await uploadBytes(uploadedRef, file, { contentType: extensions[extension] });
+    uploadComplete = true;
+    const note = {
+      title: $('#fTitle').value.trim(),
+      subject: $('#fSubject').value,
+      price,
+      by: (currentUser.displayName || currentUser.email.split('@')[0]).slice(0, 60),
+      ownerUid: currentUser.uid,
+      storagePath,
+      fileName,
+      contentType: extensions[extension],
+      createdAt: serverTimestamp()
+    };
+    await setDoc(noteRef, note);
+    notes = notes.filter(existingNote => !existingNote.isDemo);
+    notes.unshift({ id: noteRef.id, ...note, createdAt: new Date() });
+    showNotesNotice('');
+    $('#shareForm').reset();
+    $('#shareDlg').close();
+    filter = 'All'; renderChips(); renderGrid();
+    toast('Your notes have been published.');
+  } catch (error) {
+    console.error('Could not publish notes:', error);
+    if (uploadComplete) {
+      try {
+        await deleteObject(uploadedRef);
+      } catch (cleanupError) {
+        console.error('Could not remove the incomplete note upload:', cleanupError);
+        toast('Publishing failed and the uploaded file could not be removed. Check Firebase Storage.');
+        submit.disabled = false;
+        return;
+      }
+    }
+    toast(firebaseErrorMessage(error));
+  } finally {
+    submit.disabled = false;
+  }
+});
+
+onAuthStateChanged(auth, user => {
+  currentUser = user;
+  $('#signInLink').hidden = Boolean(user);
+  $('#accountBtn').hidden = !user;
+  if (user) {
+    $('#accountName').textContent = user.displayName || user.email || 'Signed in';
+    $('#accountBtn').title = user.email || user.displayName || 'Signed in';
+  }
+  renderGrid();
+  if (user && shouldOpenShare) {
+    shouldOpenShare = false;
+    history.replaceState(null, '', location.pathname);
+    $('#shareDlg').showModal();
+  }
+}, error => {
+  console.error('Could not check sign-in status:', error);
+  toast(firebaseErrorMessage(error));
+});
+
+renderChips(); renderGrid(); renderCart(); loadNotes();
+</script>
+</body>
+</html>
